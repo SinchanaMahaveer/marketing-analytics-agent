@@ -28,13 +28,15 @@ st.markdown("""
         text-align: center;
         margin-top: 2rem;
     }
+    
     .sample-question {
-        background: #f0f2f6;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        margin: 0.3rem 0;
-        font-size: 0.85rem;
-    }
+    background: #3d3d3d;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin: 0.3rem 0;
+    font-size: 0.85rem;
+    color: #ffffff;
+}
 </style>
 """, unsafe_allow_html=True)
 
