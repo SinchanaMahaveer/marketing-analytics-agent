@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import anthropic
 import plotly.express as px
-import io
 
 # ── Page config ───────────────────────────────────────────────
 st.set_page_config(
@@ -12,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── Custom CSS for professional look ──────────────────────────
+# ── Custom CSS ────────────────────────────────────────────────
 st.markdown("""
 <style>
     .main-header {
@@ -22,13 +21,6 @@ st.markdown("""
         color: white;
         margin-bottom: 2rem;
         text-align: center;
-    }
-    .metric-card {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
-        margin-bottom: 1rem;
     }
     .built-by {
         font-size: 0.8rem;
@@ -42,7 +34,6 @@ st.markdown("""
         border-radius: 6px;
         margin: 0.3rem 0;
         font-size: 0.85rem;
-        cursor: pointer;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -58,16 +49,16 @@ st.markdown("""
 # ── Sidebar ───────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### ⚙️ Setup")
-    
+
     api_key = st.text_input(
         "Anthropic API Key",
         type="password",
         help="Get your key at console.anthropic.com"
     )
-    
+
     st.markdown("---")
     st.markdown("### 📁 Upload Your Data")
-    
+
     uploaded_file = st.file_uploader(
         "CSV or Excel file",
         type=["csv", "xlsx", "xls"],
@@ -76,7 +67,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 💡 Sample Questions")
-    
+
     sample_questions = [
         "Which channel has the best ROI?",
         "Which customer segment converts most?",
@@ -85,13 +76,13 @@ with st.sidebar:
         "If I cut 30% budget, which campaigns should go?",
         "Write a CMO-ready performance summary"
     ]
-    
+
     for q in sample_questions:
         st.markdown(f"""<div class="sample-question">💬 {q}</div>""",
                    unsafe_allow_html=True)
 
     st.markdown("---")
-    
+
     if st.button("🔄 Clear Conversation", use_container_width=True):
         st.session_state.messages = []
         st.session_state.history = []
@@ -99,9 +90,10 @@ with st.sidebar:
 
     st.markdown("""
     <div class="built-by">
-        Built by [Your Name]<br>
+        Built by Sinchana Mahaveer<br>
         Ex-Amazon Data Analyst<br>
-        AI Analytics Engineer
+        AI Analytics Engineer<br><br>
+        📧 sinchanamahaveer@gmail.com
     </div>
     """, unsafe_allow_html=True)
 
@@ -114,7 +106,7 @@ if uploaded_file:
         else:
             df = pd.read_excel(uploaded_file)
 
-        # Clean common issues
+        # Auto-clean common formatting issues
         for col in df.columns:
             if df[col].dtype == object:
                 try:
@@ -125,11 +117,9 @@ if uploaded_file:
 
         st.success(f"✅ Loaded **{df.shape[0]:,} rows** × **{df.shape[1]} columns**")
 
-        # Show data overview
         with st.expander("📋 Data Preview", expanded=False):
             st.dataframe(df.head(10), use_container_width=True)
 
-        # Show quick metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Rows", f"{df.shape[0]:,}")
@@ -139,8 +129,8 @@ if uploaded_file:
             numeric_cols = df.select_dtypes(include="number").columns
             st.metric("Numeric Columns", len(numeric_cols))
         with col4:
-            st.metric("Date Range", 
-                     f"{df.shape[0]} records" if "Date" not in df.columns 
+            st.metric("Date Range",
+                     f"{df.shape[0]} records" if "Date" not in df.columns
                      else f"{df['Date'].nunique()} dates")
 
     except Exception as e:
@@ -250,23 +240,22 @@ if "messages" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# Show welcome message if no conversation yet
 if not st.session_state.messages:
     st.markdown("""
-    ### 👋 Welcome! Here's how to get started:
+    ### 👋 Welcome, I'm your Marketing Analytics Agent!
+
+    Here's how to get started:
     1. **Enter your Anthropic API key** in the sidebar
     2. **Upload your marketing data** (CSV or Excel)
-    3. **Ask any question** about your data in plain English
-    
-    > Try: *"Which channel gives the best ROI?"* or *"Give me a performance summary"*
+    3. **Ask any question** in plain English
+
+    > Try: *"Which channel gives the best ROI?"* or *"Give me a full performance summary"*
     """)
 
-# Render chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Chat input
 if prompt := st.chat_input("Ask anything about your marketing data..."):
     if not api_key:
         st.error("⚠️ Please enter your Anthropic API key in the sidebar")
@@ -275,12 +264,10 @@ if prompt := st.chat_input("Ask anything about your marketing data..."):
         st.error("⚠️ Please upload a data file first")
         st.stop()
 
-    # User message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Agent response
     with st.chat_message("assistant"):
         with st.spinner("🔍 Analysing your data..."):
             try:
